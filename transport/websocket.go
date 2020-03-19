@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	upgradeFailed     = "Upgrade failed: "
+	upgradeFailed = "Upgrade failed: "
 
 	WsDefaultPingInterval   = 30 * time.Second
 	WsDefaultPingTimeout    = 60 * time.Second
@@ -109,8 +109,13 @@ func (wst *WebsocketTransport) HandleConnection(
 		http.Error(w, upgradeFailed+ErrorMethodNotAllowed.Error(), 503)
 		return nil, ErrorMethodNotAllowed
 	}
+	upgrader := websocket.Upgrader{
+		ReadBufferSize:  wst.BufferSize,
+		WriteBufferSize: wst.BufferSize,
+		CheckOrigin:     func(r *http.Request) bool { return true },
+	}
 
-	socket, err := websocket.Upgrade(w, r, nil, wst.BufferSize, wst.BufferSize)
+	socket, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		http.Error(w, upgradeFailed+err.Error(), 503)
 		return nil, ErrorHttpUpgradeFailed
